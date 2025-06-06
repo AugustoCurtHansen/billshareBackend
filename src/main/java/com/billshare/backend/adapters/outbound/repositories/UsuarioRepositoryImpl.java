@@ -1,6 +1,8 @@
 package com.billshare.backend.adapters.outbound.repositories;
 
 import com.billshare.backend.adapters.outbound.entities.JpaUsuario;
+import com.billshare.backend.adapters.outbound.repositories.JpaUsuarioRepository;
+import com.billshare.backend.domain.userContext.EUserRoles;
 import com.billshare.backend.domain.userContext.Usuario;
 import com.billshare.backend.domain.userContext.UserRepository;
 import org.springframework.stereotype.Repository;
@@ -17,11 +19,13 @@ public class UsuarioRepositoryImpl implements UserRepository {
     }
 
     private Usuario convertToDomain(JpaUsuario jpaUser) {
-        return new Usuario();
+        Usuario user = new Usuario(jpaUser.getUserName(), jpaUser.getEmail(), EUserRoles.DEFAULT);
+        user.setId(jpaUser.getId());
+        return user;
     }
 
     private JpaUsuario convertToJpa(Usuario usuario) {
-        return new JpaUsuario();
+        return new JpaUsuario(usuario.getId(), usuario.getUserName(), usuario.getEmail());
     }
 
     @Override
@@ -32,31 +36,32 @@ public class UsuarioRepositoryImpl implements UserRepository {
 
     @Override
     public Usuario save(Usuario usuario) {
-        return null;
+        JpaUsuario saved = userRepository.save(convertToJpa(usuario));
+        return convertToDomain(saved);
     }
 
     @Override
     public Optional<Usuario> findById(Long id) {
-        return Optional.empty();
+        return userRepository.findById(id).map(this::convertToDomain);
     }
 
     @Override
     public Optional<Usuario> findByEmail(String email) {
-        return Optional.empty();
+        return userRepository.findByEmail(email).map(this::convertToDomain);
     }
 
     @Override
     public List<Usuario> findAllActiveUsers() {
-        return null;
+        return userRepository.findAll().stream().map(this::convertToDomain).toList();
     }
 
     @Override
     public void delete(Usuario usuario) {
-
+        userRepository.delete(convertToJpa(usuario));
     }
 
     @Override
     public boolean existsByEmailAndActiveTrue(String email) {
-        return false;
+        return userRepository.existsByEmail(email);
     }
 }
